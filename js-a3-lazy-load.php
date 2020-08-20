@@ -3,7 +3,7 @@
 Plugin Name: Jungle Scout - a3 Lazy Load
 Description: Speed up your site and enhance frontend user's visual experience in PC's, Tablets and mobile with a3 Lazy Load.
 
-Version: 2.4.3
+Version: 2.4.4
 Author: a3rev Software
 Author URI: https://a3rev.com/
 Requires at least: 4.9
@@ -22,6 +22,8 @@ License: GPLv2 or later
 */
 ?>
 <?php
+include_once(__DIR__ . '/classes/class-js-updater.php');
+
 define('A3_LAZY_LOAD_FILE_PATH', dirname(__FILE__));
 define('A3_LAZY_LOAD_DIR_NAME', basename(A3_LAZY_LOAD_FILE_PATH));
 define('A3_LAZY_LOAD_FOLDER', dirname(plugin_basename(__FILE__)));
@@ -34,7 +36,7 @@ define('A3_LAZY_LOAD_IMAGES_URL', A3_LAZY_LOAD_URL . '/assets/images');
 
 define( 'A3_LAZY_LOAD_KEY', 'a3_lazy_load' );
 define( 'A3_LAZY_LOAD_PREFIX', 'a3_lazy_load_' );
-define( 'A3_LAZY_VERSION', '2.4.3' );
+define( 'A3_LAZY_VERSION', '2.4.4' );
 define( 'A3_LAZY_LOAD_G_FONTS', false );
 
 use \A3Rev\LazyLoad\FrameWork;
@@ -46,6 +48,10 @@ if ( version_compare( PHP_VERSION, '5.6.0', '>=' ) ) {
 	 * Plugin Framework init
 	 */
 	$GLOBALS[A3_LAZY_LOAD_PREFIX.'admin_interface'] = new FrameWork\Admin_Interface();
+	
+	if (is_admin()) {
+		new \JSGithubUpdater(__FILE__, 'willschwanke', 'a3-lazy-load');
+	}
 
 	global $a3_lazy_load_settings_page;
 	$a3_lazy_load_settings_page = new FrameWork\Pages\Settings();

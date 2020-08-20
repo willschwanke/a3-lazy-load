@@ -15,7 +15,7 @@ class JSGithubUpdater {
   private $accessToken; // GitHub private repo token
 
   function __construct( $pluginFile, $gitHubUsername, $gitHubProjectName, $accessToken = '' ) {
-    add_filter('pre_set_site_transient_update_plugins', [$this, 'setTransitent']);
+    add_filter('site_transient_update_plugins', [$this, 'preSetTransitent']);
     add_filter('plugins_api', [$this, 'setPluginInfo'], 10, 3 );
     add_filter('upgrader_post_install', [$this, 'postInstall'], 10, 3 );
 
@@ -27,7 +27,7 @@ class JSGithubUpdater {
 
   // Get information regarding our plugin from WordPress
   private function initPluginData() {
-    $this->slug = plugin_basename($this->pluginFile);
+    $this->slug = preg_replace('/\/.*/', '', plugin_basename($this->pluginFile));
     $this->pluginData = get_plugin_data($this->pluginFile);
   }
 
@@ -55,16 +55,16 @@ class JSGithubUpdater {
   }
 
   // Push in plugin version information to get the update notification
-  public function setTransitent( $transient ) {
+  public function preSetTransitent( $transient ) {
     if (empty($transient->checked)) {
       return $transient;
     }
-
+    
     $this->initPluginData();
     $this->getRepoReleaseInfo();
-
+    
     $doUpdate = version_compare($this->githubAPIResult->tag_name, $transient->checked[$this->slug]);
-
+    
     if ($doUpdate === 1) {
       $package = $this->githubAPIResult->zipball_url;
       
@@ -73,13 +73,58 @@ class JSGithubUpdater {
       }
 
       $obj = new \stdClass();
+      $obj->id = "w.org/plugins/{$this->slug}";
       $obj->slug = $this->slug;
+      $obj->plugin = plugin_basename($this->pluginFile);
       $obj->new_version = $this->githubAPIResult->tag_name;
-      $obj->url = $this->pluginData["PluginURI"];
+      $obj->url = 'https://github.com/willschwanke/a3-lazy-load/releases';
       $obj->package = $package;
-      $transient->response[$this->slug] = $obj;
+      $obj->icons = [];
+      $obj->banners = [];
+      $obj->banners_rtl = [];
+      $obj->tested = '5.5';
+      $obj->requires_php = '';
+      $obj->compatibility = new \stdClass();
+
+      $transient->response[plugin_basename($this->pluginFile)] = $obj;
+
+      set_site_transient( 'update_plugins', $transient );
     }
 
+    return $transient;
+  }
+  
+  // Push in plugin version information to get the update notification
+  public function setTransitent( $transient ) {
+    $this->initPluginData();
+    $this->getRepoReleaseInfo();
+    
+    $doUpdate = version_compare($this->githubAPIResult->tag_name, $transient->checked[$this->slug]);
+    
+    if ($doUpdate === 1) {
+      $package = $this->githubAPIResult->zipball_url;
+      
+      if (!empty($this->accessToken)) {
+        $package = add_query_arg(['access_token' => $this->accessToken], $package);
+      }
+
+      $obj = new \stdClass();
+      $obj->id = "w.org/plugins/{$this->slug}";
+      $obj->slug = $this->slug;
+      $obj->plugin = plugin_basename($this->pluginFile);
+      $obj->new_version = $this->githubAPIResult->tag_name;
+      $obj->url = 'https://github.com/willschwanke/a3-lazy-load/releases';
+      $obj->package = $package;
+      $obj->icons = [];
+      $obj->banners = [];
+      $obj->banners_rtl = [];
+      $obj->tested = '5.5';
+      $obj->requires_php = '';
+      $obj->compatibility = new \stdClass();
+
+      $transient->response[plugin_basename($this->pluginFile)] = $obj;
+
+    }
     return $transient;
   }
 
@@ -97,7 +142,7 @@ class JSGithubUpdater {
     $response->plugin_name = $this->pluginData["Name"];
     $response->version = $this->githubAPIResult->tag_name;
     $response->author = $this->pluginData["AuthorName"];
-    $response->homepage = $this->pluginData["PluginURI"];
+    $response->homepage = $this->pluginData["AuthorURI"];
 
     $downloadLink = $this->githubAPIResult->zipball_url;
     
