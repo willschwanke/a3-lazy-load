@@ -15,7 +15,7 @@ class JSGithubUpdater {
   private $accessToken; // GitHub private repo token
 
   function __construct( $pluginFile, $gitHubUsername, $gitHubProjectName, $accessToken = '' ) {
-    add_filter('site_transient_update_plugins', [$this, 'preSetTransitent']);
+    add_filter('site_transient_update_plugins', [$this, 'setTransitent']);
     add_filter('plugins_api', [$this, 'setPluginInfo'], 10, 3 );
     add_filter('upgrader_post_install', [$this, 'postInstall'], 10, 3 );
 
@@ -55,7 +55,7 @@ class JSGithubUpdater {
   }
 
   // Push in plugin version information to get the update notification
-  public function preSetTransitent( $transient ) {
+  public function setTransitent( $transient ) {
     if (empty($transient->checked)) {
       return $transient;
     }
@@ -87,44 +87,8 @@ class JSGithubUpdater {
       $obj->compatibility = new \stdClass();
 
       $transient->response[plugin_basename($this->pluginFile)] = $obj;
-
-      set_site_transient( 'update_plugins', $transient );
     }
 
-    return $transient;
-  }
-  
-  // Push in plugin version information to get the update notification
-  public function setTransitent( $transient ) {
-    $this->initPluginData();
-    $this->getRepoReleaseInfo();
-    
-    $doUpdate = version_compare($this->githubAPIResult->tag_name, $transient->checked[$this->slug]);
-    
-    if ($doUpdate === 1) {
-      $package = $this->githubAPIResult->zipball_url;
-      
-      if (!empty($this->accessToken)) {
-        $package = add_query_arg(['access_token' => $this->accessToken], $package);
-      }
-
-      $obj = new \stdClass();
-      $obj->id = "w.org/plugins/{$this->slug}";
-      $obj->slug = $this->slug;
-      $obj->plugin = plugin_basename($this->pluginFile);
-      $obj->new_version = $this->githubAPIResult->tag_name;
-      $obj->url = 'https://github.com/willschwanke/a3-lazy-load/releases';
-      $obj->package = $package;
-      $obj->icons = [];
-      $obj->banners = [];
-      $obj->banners_rtl = [];
-      $obj->tested = '5.5';
-      $obj->requires_php = '';
-      $obj->compatibility = new \stdClass();
-
-      $transient->response[plugin_basename($this->pluginFile)] = $obj;
-
-    }
     return $transient;
   }
 
@@ -183,7 +147,7 @@ class JSGithubUpdater {
     $wasActivated = is_plugin_active($this->slug);
 
     global $wp_filesystem;
-    $pluginFolder = WP_PLUGIN_DIR . DIRECTORY_SEPARATOR . dirname($this->slug);
+    $pluginFolder = WP_PLUGIN_DIR . DIRECTORY_SEPARATOR . 'js-a3-lazy-load';
     $wp_filesystem->move($result['destination'], $pluginFolder);
     $result['destination'] = $pluginFolder;
 
