@@ -7,11 +7,9 @@ Version: 2.4.5
 Author: a3rev Software
 Author URI: https://a3rev.com/
 Requires at least: 4.9
-Tested up to: 5.5
+Tested up to: 5.6
 Text Domain: a3-lazy-load
 Domain Path: /languages
-WC requires at least: 2.0.0
-WC tested up to: 4.4
 License: GPLv2 or later
 	Copyright © 2011 a3 Revolution Software Development team
 	a3 Revolution Software Development team
